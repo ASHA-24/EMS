@@ -1,0 +1,227 @@
+{% extends 'leaves/base.html' %}
+
+{% block title %}Leave Requests - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h4 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Leave Requests
+                    </h4>
+                    <p class="mb-0 mt-1 text-white-50">
+                        View and manage all submitted leave requests
+                    </p>
+                </div>
+                <div class="mt-2 mt-md-0">
+                    <a href="{% url 'leave_request' %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus me-1"></i>New Request
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if leaves %}
+                    <!-- Statistics Cards -->
+                    <div class="row g-0 border-bottom">
+                        <div class="col-md-4 p-3 border-end">
+                            <div class="text-center">
+                                <h5 class="text-primary mb-1">{{ leaves|length }}</h5>
+                                <small class="text-muted">Total Requests</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 p-3 border-end">
+                            <div class="text-center">
+                                <h5 class="text-success mb-1">
+                                    {{ leaves|length }}
+                                </h5>
+                                <small class="text-muted">This Month</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 p-3">
+                            <div class="text-center">
+                                <h5 class="text-info mb-1">
+                                    {% for leave in leaves %}
+                                        {% if forloop.first %}{{ leave.get_leave_type_display }}{% endif %}
+                                    {% endfor %}
+                                </h5>
+                                <small class="text-muted">Recent Type</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Responsive Table -->
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">
+                                        <i class="fas fa-user me-1"></i>Employee
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-id-card me-1"></i>ID
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-tag me-1"></i>Type
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-calendar-plus me-1"></i>Start Date
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-calendar-minus me-1"></i>End Date
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-clock me-1"></i>Duration
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-calendar-check me-1"></i>Submitted
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-comment me-1"></i>Notes
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for leave in leaves %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 12px;">
+                                                {{ leave.employee_name|first|upper }}
+                                            </div>
+                                            <span class="fw-medium">{{ leave.employee_name }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <code class="bg-light p-1 rounded">{{ leave.employee_id }}</code>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if leave.leave_type == 'sick' %}warning{% elif leave.leave_type == 'annual' %}success{% elif leave.leave_type == 'emergency' %}danger{% else %}info{% endif %} rounded-pill">
+                                            {{ leave.get_leave_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-medium">{{ leave.start_date|date:"M d, Y" }}</span>
+                                            <small class="text-muted">{{ leave.start_date|date:"l" }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-medium">{{ leave.end_date|date:"M d, Y" }}</span>
+                                            <small class="text-muted">{{ leave.end_date|date:"l" }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% load custom_filters %}
+                                        <span class="badge bg-secondary">
+                                            {% with start=leave.start_date end=leave.end_date %}
+                                                {% if start == end %}
+                                                    1 day
+                                                {% else %}
+                                                    {{ end|timeuntil:start|slice:"-4" }}
+                                                {% endif %}
+                                            {% endwith %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-medium">{{ leave.created_at|date:"M d, Y" }}</span>
+                                            <small class="text-muted">{{ leave.created_at|timesince }} ago</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if leave.comments %}
+                                            <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ leave.comments|truncatechars:100 }}">
+                                                <i class="fas fa-comment"></i>
+                                            </button>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination (if needed) -->
+                    <div class="card-footer bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                Showing {{ leaves|length }} request{{ leaves|length|pluralize }}
+                            </small>
+                            <div>
+                                <button class="btn btn-sm btn-outline-secondary me-1">
+                                    <i class="fas fa-download me-1"></i>Export
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-print me-1"></i>Print
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Empty State -->
+                    <div class="text-center py-5">
+                        <div class="mb-4">
+                            <i class="fas fa-inbox fa-4x text-muted"></i>
+                        </div>
+                        <h5 class="text-muted mb-3">No leave requests found</h5>
+                        <p class="text-muted mb-4">
+                            There are no leave requests to display at the moment.<br>
+                            Submit your first leave request to get started.
+                        </p>
+                        <a href="{% url 'leave_request' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Submit Your First Request
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if leaves %}
+        <!-- Recent Activity Card -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Activity
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    {% for leave in leaves|slice:":3" %}
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                <i class="fas fa-calendar fa-sm"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="fw-medium">{{ leave.employee_name }}</div>
+                            <div class="text-muted small">
+                                Submitted {{ leave.get_leave_type_display|lower }} request for 
+                                {{ leave.start_date|date:"M d" }} - {{ leave.end_date|date:"M d, Y" }}
+                            </div>
+                            <div class="text-muted small">{{ leave.created_at|timesince }} ago</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}
